@@ -100,7 +100,7 @@ class DatasetGenerator:
     def next(self):
         """Retrieve the next pairs from the dataset"""
 
-        if self.index + self.batch_size > self.end_index:
+        if self.index + self.batch_size > self.end_index+1:
             if not self.repeater:
                 raise StopIteration
             else:
@@ -132,19 +132,10 @@ class DatasetGenerator:
         if self.data_type is 'float32':
             features = img_as_float32(features)
 
-        # loading labels(segmentation)
-        segmentation = np.array([
-                img_as_ubyte(   
-                    resize(image=imread(
-                        self.dataset.SEGMENTATION[i]),
-                           output_shape=self.output_shape +(1,))/255)
-            for i in range(self.index - self.batch_size, self.index)
-        ])
-
         if(self.give_reference):
-            return features, segmentation, imread(self.dataset.RGB[self.index - self.batch_size]), self.dataset.RGB[self.index - self.batch_size] 
+            return features, imread(self.dataset.RGB[self.index - self.batch_size]), self.dataset.RGB[self.index - self.batch_size] 
         else:
-            return features, segmentation
+            return features
 
 
 class CrossRoad(DatasetGenerator):
@@ -163,15 +154,8 @@ class CrossRoad(DatasetGenerator):
             rgb_dir + rgb for rgb in os.listdir(rgb_dir)
         ]
 
-        segmentation_dir =  self.dataset_dir + "/mask/"
-        segmentation_data = [
-            segmentation_dir + segmentation
-            for segmentation in os.listdir(segmentation_dir)
-        ]
-
         dataset = {
-            'RGB': rgb_data,
-            'SEGMENTATION': segmentation_data
+            'RGB': rgb_data
         }
 
         if self.shuffle:
